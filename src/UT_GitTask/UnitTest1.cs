@@ -13,28 +13,33 @@ namespace UT_GitTask
             string json = @"{
                         'Username': 'username',
                         'Password': 'password',
-                        'Dependencies': {
-                            'project1' : {
+                        'Dependencies': [
+                            {
+                                'Name': 'project1',
                                 'Remote': 'http://serverName/repository1',
                                 'Branch': 'master',
                                 'Commit':''
                             },
-                            'project2': {
+                            { 
+                                'Name': 'project2',
                                 'Remote': 'http://serverName/repository2',
                                 'TopFolder': 'Top',
                                 'Branch': 'master',
                                 'Commit':''   
                             },
-                            'project3': {
+                            {
+                                'Name': 'project3',
                                 'Remote': 'http://serverName/repository3',
                                 'Branch': 'master',
                                 'TopFolder': 'Top',
                                 'Commit':''
                             }
-                        }
+                        ]
                     }";
 
             var deserializedDependencies = JsonConvert.DeserializeObject<CompileDependencies>(json);
+
+            Assert.AreEqual(deserializedDependencies.Dependencies[1].TopFolder, "Top");
         }
     }
 }

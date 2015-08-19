@@ -11,11 +11,12 @@ namespace MsBuild.GitCloneTask
         public string Name { get; set; }
         public string Remote { get; set; }
 
+        public string TopFolder { get; set; }
+
         public string Branch { get; set; } = "master";
 
         public string Commit { get; set; }
 
-        public string TopFolder { get; set; }
     }
 
     public class CompileDependencies
