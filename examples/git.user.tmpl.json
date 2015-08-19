@@ -1,0 +1,20 @@
+{
+  "Username": "",
+  "Password": "password",
+  "Dependencies": [
+    {
+      "Name": "gsx.skemodel",
+      "Remote": "http://{0}:{1}@gsxtfs2013:8080/tfs/common-libs/_git/Gsx.SkeModel",
+      "Branch": "NewNavigables",
+      "Commit":""
+    },
+
+    {
+      "Name": "localGitRepository",
+      "Remote": "file:///your\\path\\to\\a\\local\\git\\repository",
+      "Branch": "branhcName",
+      "Commit": ""
+    }
+  ]
+}
+
