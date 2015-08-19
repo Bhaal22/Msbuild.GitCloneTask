@@ -55,32 +55,24 @@ namespace Msbuild
 
         #region Logging
         protected void Debug(string p) {
-#if MSBUILD
             if (RunningInMSBuild) {
                 GenericMSBuildLog(p, MessageImportance.Low);
             }
-#endif
         }
 
         protected void Log(string p) {
-#if MSBUILD
             if (RunningInMSBuild) {
                 GenericMSBuildLog(p, MessageImportance.Normal);
             }
-#endif
         }
 
         protected void Warn(string p) {
-#if MSBUILD
             if (RunningInMSBuild) {
                 GenericMSBuildLog(p, MessageImportance.High);
             }
-#endif
         }
         #endregion
 
-        #region Build Tool specific stuff
-#if MSBUILD
         #region MSBuild ITask Members
 
         private IBuildEngine buildEngine;
@@ -109,7 +101,6 @@ namespace Msbuild
             }
         }
 
-        #endregion
 
         #region support stuff
         private static readonly string HELP_KEYWORD = string.Empty;
@@ -118,7 +109,6 @@ namespace Msbuild
             BuildEngine.LogMessageEvent(new BuildMessageEventArgs(message, HELP_KEYWORD, "git", i));
         }
         #endregion
-#endif
 
         #endregion
 
@@ -164,6 +154,7 @@ namespace Msbuild
                     Branch = p.Branch,
                     Commit = p.Commit,
                     Name = p.Name,
+                    TopFolder = p.TopFolder,
                     Remote = string.Format(p.Remote, _rawDependencies.Username, _rawDependencies.Password)
                 }).ToDictionary(p => p.Name);
 
@@ -233,19 +224,20 @@ namespace Msbuild
         }
     }
 
-#if MSBUILD
     /// <summary>
-    /// MSBuild task to run Ant.
+    /// MSBuild task to run GitClone.
     /// </summary>
-    public class Git : BaseGit, ITask {
+    public class Git : BaseGit, ITask
+    {
         public Git()
-            : base(BuildTool.MSBuild) {
+            : base(BuildTool.MSBuild)
+        {
         }
 
-        public bool Execute() {
+        public bool Execute()
+        {
             return Run();
         }
     }
-#endif
 
 }

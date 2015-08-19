@@ -31,7 +31,7 @@ namespace UT_GitTask
                                 'Name': 'project3',
                                 'Remote': 'http://serverName/repository3',
                                 'Branch': 'master',
-                                'TopFolder': 'Top',
+                                'TopFolder': 'Toto',
                                 'Commit':''
                             }
                         ]
@@ -39,7 +39,7 @@ namespace UT_GitTask
 
             var deserializedDependencies = JsonConvert.DeserializeObject<CompileDependencies>(json);
 
-            Assert.AreEqual(deserializedDependencies.Dependencies[1].TopFolder, "Top");
+            Assert.AreEqual(deserializedDependencies.Dependencies[2].TopFolder, "Toto");
         }
     }
 }
