@@ -1,0 +1,3 @@
+# Msbuild.GitCloneTask
+Msbuild.GitCloneTask
+
