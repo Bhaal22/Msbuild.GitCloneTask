@@ -3,9 +3,9 @@
   "Password": "password",
   "Dependencies": [
     {
-      "Name": "gsx.skemodel",
-      "Remote": "http://{0}:{1}@gsxtfs2013:8080/tfs/common-libs/_git/Gsx.SkeModel",
-      "Branch": "NewNavigables",
+      "Name": "ProjectName",
+      "Remote": "https://github.com/Bhaal22/Msbuild.GitCloneTask.git",
+      "Branch": "BranchName",
       "Commit":""
     },
 
