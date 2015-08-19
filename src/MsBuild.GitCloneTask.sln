@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GitTask", "GitTask.csproj", "{ADE30FAD-832F-4323-8049-E25A9FAFFF14}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsBuild.GitCloneTask", "MsBuild.GitCloneTask.csproj", "{ADE30FAD-832F-4323-8049-E25A9FAFFF14}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UT_GitTask", "UT_GitTask\UT_GitTask.csproj", "{6C19C218-2258-41D2-B1DF-22BD071B2813}"
 EndProject

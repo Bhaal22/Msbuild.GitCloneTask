@@ -1,7 +1,6 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
-using gsx.msbuild;
+using MsBuild.GitCloneTask;
 
 namespace UT_GitTask
 {
@@ -12,24 +11,24 @@ namespace UT_GitTask
         public void TestMethod1()
         {
             string json = @"{
-                        'Username': 'gmonitor',
-                        'Password': 'Mon1tor',
+                        'Username': 'username',
+                        'Password': 'password',
                         'Dependencies': {
-                            'gsx.skemodel' : {
-                                'Remote': 'http://{0}:{1}@gsxtfs2013:8080/tfs/common-libs/_git/Gsx.SkeModel',
+                            'project1' : {
+                                'Remote': 'http://serverName/repository1',
                                 'Branch': 'master',
                                 'Commit':''
                             },
-                            'powershellScanComponent': {
-                                'Remote': 'http://{0}:{1}@gsxtfs2013:8080/tfs/gsx.skecomponents/_git/gsx.ske.powershellscancomponent',
-                                'TopFolder': 'ScanComponents',
+                            'project2': {
+                                'Remote': 'http://serverName/repository2',
+                                'TopFolder': 'Top',
                                 'Branch': 'master',
                                 'Commit':''   
                             },
-                            'diskScanComponent': {
-                                'Remote': 'http://{0}:{1}@gsxtfs2013:8080/tfs/gsx.skecomponents/_git/gsx.ske.diskscancomponent',
+                            'project3': {
+                                'Remote': 'http://serverName/repository3',
                                 'Branch': 'master',
-                                'TopFolder': 'ScanComponents',
+                                'TopFolder': 'Top',
                                 'Commit':''
                             }
                         }

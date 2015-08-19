@@ -2,48 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Linq;
 
 using Microsoft.Build.Framework;
 using Newtonsoft.Json;
+using MsBuild.GitCloneTask;
 
-namespace gsx.msbuild {
-
-    public class Dependency
-    {
-        public string Name { get; set; }
-        public string Remote { get; set; }
-
-        public string Branch { get; set; } = "master";
-
-        public string Commit { get; set; }
-
-        public string TopFolder { get; set; }
-    }
-
-    public class CompileDependencies
-    {
-        public string Username { get; set; }
-
-        public string Password { get; set; }
-        public IList<Dependency> Dependencies { get; set; }
-
-        public CompileDependencies()
-        {
-            Username = string.Empty;
-            Password = string.Empty;
-
-            Dependencies = new List<Dependency>();
-        }
-
-        public CompileDependencies(CompileDependencies from)
-        {
-            Username = from.Username;
-            Password = from.Password;
-            Dependencies = new List<Dependency>(from.Dependencies);
-        }
-    }
+namespace Msbuild
+{
 
     public enum BuildTool { MSBuild }
 
@@ -156,7 +122,7 @@ namespace gsx.msbuild {
 
         #endregion
 
-        protected bool RunAnt() {
+        protected bool Run() {
 
             string gitCommandTemplate  = "{0} -b {1} {2} {3}";
 
@@ -277,7 +243,7 @@ namespace gsx.msbuild {
         }
 
         public bool Execute() {
-            return RunAnt();
+            return Run();
         }
     }
 #endif

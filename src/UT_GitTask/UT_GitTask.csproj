@@ -58,7 +58,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GitTask.csproj">
+    <ProjectReference Include="..\MsBuild.GitCloneTask.csproj">
       <Project>{ade30fad-832f-4323-8049-e25a9fafff14}</Project>
       <Name>GitTask</Name>
     </ProjectReference>
