@@ -8,14 +8,47 @@ namespace MsBuild.GitCloneTask
 {
     public class Dependency
     {
-        public string Name { get; set; }
-        public string Remote { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Remote { get; set; } = string.Empty;
 
-        public string TopFolder { get; set; }
+        public string LocalFolder { get; set; } = string.Empty;
+
+        public string TopFolder { get; set; } = string.Empty;
 
         public string Branch { get; set; } = "master";
 
-        public string Commit { get; set; }
+        public string Commit { get; set; } = string.Empty;
+
+
+        public string InputSourceReference
+        {
+            get
+            {
+                if (UseGit)
+                    return Remote;
+
+                return LocalFolder;
+            }
+        }
+
+        public string OutputFolder
+        {
+            get
+            {
+                if (UseGit)
+                    return string.Format(@".\git\{0}\{1}", TopFolder, Remote);
+
+                return string.Format(@"{0}", LocalFolder);
+            }
+        }
+
+        public bool UseGit
+        {
+            get
+            {
+                return !string.IsNullOrEmpty(Remote);
+            }
+        }
 
     }
 

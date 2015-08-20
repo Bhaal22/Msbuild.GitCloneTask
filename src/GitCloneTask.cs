@@ -122,22 +122,26 @@ namespace Msbuild
 
             var dependencies = _mergeDependencies(_rawDependencies, _userDefinedDependencies);
 
-            Names = dependencies.Select(d => string.Format(@".\git\{0}\{1}\build.xml", d.TopFolder, d.Name)).ToArray();
+            Names = dependencies.Select(d => {
+                return string.Format(@"{0}\build.xml", d.OutputFolder);
+            }).ToArray();
             
 
             foreach (var dependency in dependencies)
             {
-                var gitCommand = string.Empty;
-                var folder = string.Format(@".\git\{0}\{1}", dependency.TopFolder, dependency.Name);
-                if (!Directory.Exists(folder))
+                if (dependency.UseGit)
                 {
-                    gitCommand = string.Format(gitCommandTemplate, "clone", dependency.Branch, dependency.Remote, folder);
+                    var gitCommand = string.Empty;
+                    if (!Directory.Exists(dependency.OutputFolder))
+                    {
+                        gitCommand = string.Format(gitCommandTemplate, "clone", dependency.Branch, dependency.Remote, dependency.OutputFolder);
 
-                    Log(gitCommand);
-                    Run("git", gitCommand);
-                }
-                else
-                {
+                        Log(gitCommand);
+                        Run("git", gitCommand);
+                    }
+                    else
+                    {
+                    }
                 }
 
             }
@@ -155,7 +159,8 @@ namespace Msbuild
                     Commit = p.Commit,
                     Name = p.Name,
                     TopFolder = p.TopFolder,
-                    Remote = string.Format(p.Remote, _rawDependencies.Username, _rawDependencies.Password)
+                    Remote = string.Format(p.Remote, _rawDependencies.Username, _rawDependencies.Password),
+                    LocalFolder = p.LocalFolder
                 }).ToDictionary(p => p.Name);
 
             Log("UserDefined Dependencies");
@@ -166,7 +171,8 @@ namespace Msbuild
                     Branch = p.Branch,
                     Commit = p.Commit,
                     Name = p.Name,
-                    Remote = string.Format(p.Remote, _userDefinedDependencies.Username, _userDefinedDependencies.Password)
+                    Remote = string.Format(p.Remote, _userDefinedDependencies.Username, _userDefinedDependencies.Password),
+                    LocalFolder = p.LocalFolder
                 }).ToDictionary(p => p.Name);
 
             Log("Merge Dependencies");
