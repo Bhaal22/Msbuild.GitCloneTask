@@ -106,7 +106,8 @@ namespace Msbuild
         private static readonly string HELP_KEYWORD = string.Empty;
 
         private void GenericMSBuildLog(string message, MessageImportance i) {
-            BuildEngine.LogMessageEvent(new BuildMessageEventArgs(message, HELP_KEYWORD, "git", i));
+            if (BuildEngine != null)
+                BuildEngine.LogMessageEvent(new BuildMessageEventArgs(message, HELP_KEYWORD, "git", i));
         }
         #endregion
 
@@ -149,7 +150,7 @@ namespace Msbuild
             return true;
         }
 
-        private List<Dependency> _mergeDependencies(CompileDependencies _rawDependencies, CompileDependencies _userDefinedDependencies)
+        public List<Dependency> _mergeDependencies(CompileDependencies _rawDependencies, CompileDependencies _userDefinedDependencies)
         {
             Log(string.Format("Raw Dependencies: Count = {0}", _rawDependencies.Dependencies.Count));
             IDictionary<string, Dependency> transformedRawDependencies = _rawDependencies.Dependencies.Select(p =>
@@ -171,6 +172,7 @@ namespace Msbuild
                     Branch = p.Branch,
                     Commit = p.Commit,
                     Name = p.Name,
+                    TopFolder = p.TopFolder,
                     Remote = string.Format(p.Remote, _userDefinedDependencies.Username, _userDefinedDependencies.Password),
                     LocalFolder = p.LocalFolder
                 }).ToDictionary(p => p.Name);
