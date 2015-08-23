@@ -5,7 +5,7 @@ using MsBuild.GitCloneTask;
 namespace UT_GitTask
 {
     [TestClass]
-    public class UnitTest1
+    public class JsonFormat
     {
         [TestMethod]
         public void TestMethod1()
