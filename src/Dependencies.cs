@@ -36,7 +36,7 @@ namespace MsBuild.GitCloneTask
             get
             {
                 if (UseGit)
-                    return string.Format(@".\git\{0}\{1}", TopFolder, Remote);
+                    return string.Format(@".\git\{0}\{1}", TopFolder, Name);
 
                 return string.Format(@"{0}", LocalFolder);
             }
