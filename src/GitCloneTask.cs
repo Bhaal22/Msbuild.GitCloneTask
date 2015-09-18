@@ -153,7 +153,7 @@ namespace Msbuild
                             options.FetchOptions = new FetchOptions();
                             options.FetchOptions.CredentialsProvider = new CredentialsHandler(
                                 (url, usernameFromUrl, types) => new DefaultCredentials());
-                            repo.Network.Pull(new Signature(dependency.Username, "gmonitor@gsx.com", new DateTimeOffset(DateTime.Now)), options);
+                            repo.Network.Pull(new Signature(dependency.Username, "", new DateTimeOffset(DateTime.Now)), options);
                         }
                     }
                 }
