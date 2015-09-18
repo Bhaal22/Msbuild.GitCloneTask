@@ -135,7 +135,6 @@ namespace Msbuild
             {
                 if (dependency.UseGit)
                 {
-                    var gitCommand = string.Empty;
                     if (!Directory.Exists(dependency.OutputFolder))
                     { 
                         var co = new CloneOptions();
@@ -149,6 +148,10 @@ namespace Msbuild
                     }
                     else
                     {
+                        using (var repo = new Repository(dependency.OutputFolder))
+                        {
+                            repo.Network.Pull(new LibGit2Sharp.Signature(USERNAME, EMAIL, new DateTimeOffset(DateTime.Now)), options);
+                        }
                     }
                 }
 
