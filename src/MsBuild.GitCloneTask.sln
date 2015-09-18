@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsBuild.GitCloneTask", "MsB
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UT_GitTask", "UT_GitTask\UT_GitTask.csproj", "{6C19C218-2258-41D2-B1DF-22BD071B2813}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibGit2Sharp", "..\libs\libgit2\LibGit2Sharp\LibGit2Sharp.csproj", "{EE6ED99F-CB12-4683-B055-D28FC7357A34}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{6C19C218-2258-41D2-B1DF-22BD071B2813}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6C19C218-2258-41D2-B1DF-22BD071B2813}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6C19C218-2258-41D2-B1DF-22BD071B2813}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE6ED99F-CB12-4683-B055-D28FC7357A34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE6ED99F-CB12-4683-B055-D28FC7357A34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE6ED99F-CB12-4683-B055-D28FC7357A34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE6ED99F-CB12-4683-B055-D28FC7357A34}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

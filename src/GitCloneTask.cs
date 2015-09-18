@@ -8,6 +8,9 @@ using Microsoft.Build.Framework;
 using Newtonsoft.Json;
 using MsBuild.GitCloneTask;
 
+
+using LibGit2Sharp;
+
 namespace Msbuild
 {
 
@@ -115,7 +118,7 @@ namespace Msbuild
 
         protected bool Run() {
 
-            string gitCommandTemplate  = "{0} -b {1} {2} {3}";
+            //string gitCommandTemplate  = "{0} -b {1} {2} {3}";
 
             var _rawDependencies = JsonConvert.DeserializeObject<CompileDependencies>(File.ReadAllText(DependencyFile));
             var _userDefinedDependencies = readUserDefinedDependencies();
@@ -134,11 +137,15 @@ namespace Msbuild
                 {
                     var gitCommand = string.Empty;
                     if (!Directory.Exists(dependency.OutputFolder))
-                    {
-                        gitCommand = string.Format(gitCommandTemplate, "clone", dependency.Branch, dependency.Remote, dependency.OutputFolder);
+                    { 
+                        var co = new CloneOptions();
+                        co.BranchName = dependency.Branch;
+                        Repository.Clone(dependency.Remote, dependency.OutputFolder, co);
 
-                        Log(gitCommand);
-                        Run("git", gitCommand);
+                        //gitCommand = string.Format(gitCommandTemplate, "clone", dependency.Branch, dependency.Remote, dependency.OutputFolder);
+
+                        //Log(gitCommand);
+                        //Run("git", gitCommand);
                     }
                     else
                     {
