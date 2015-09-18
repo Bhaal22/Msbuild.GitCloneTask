@@ -10,6 +10,7 @@ using MsBuild.GitCloneTask;
 
 
 using LibGit2Sharp;
+using LibGit2Sharp.Handlers;
 
 namespace Msbuild
 {
@@ -136,21 +137,23 @@ namespace Msbuild
                 if (dependency.UseGit)
                 {
                     if (!Directory.Exists(dependency.OutputFolder))
-                    { 
+                    {
+                        Warn(string.Format("Cloning {0} into {1}", dependency.Remote, dependency.OutputFolder));
                         var co = new CloneOptions();
+                        co.CredentialsProvider = (_url, _user, _cred) => new DefaultCredentials();
                         co.BranchName = dependency.Branch;
                         Repository.Clone(dependency.Remote, dependency.OutputFolder, co);
-
-                        //gitCommand = string.Format(gitCommandTemplate, "clone", dependency.Branch, dependency.Remote, dependency.OutputFolder);
-
-                        //Log(gitCommand);
-                        //Run("git", gitCommand);
                     }
                     else
                     {
                         using (var repo = new Repository(dependency.OutputFolder))
                         {
-                            repo.Network.Pull(new LibGit2Sharp.Signature(USERNAME, EMAIL, new DateTimeOffset(DateTime.Now)), options);
+                            Warn(string.Format("Pulling {0}", dependency.Remote));
+                            var options = new PullOptions();
+                            options.FetchOptions = new FetchOptions();
+                            options.FetchOptions.CredentialsProvider = new CredentialsHandler(
+                                (url, usernameFromUrl, types) => new DefaultCredentials());
+                            repo.Network.Pull(new Signature(dependency.Username, "gmonitor@gsx.com", new DateTimeOffset(DateTime.Now)), options);
                         }
                     }
                 }
@@ -170,7 +173,9 @@ namespace Msbuild
                     Commit = p.Commit,
                     Name = p.Name,
                     TopFolder = p.TopFolder,
-                    Remote = string.Format(p.Remote, _rawDependencies.Username, _rawDependencies.Password),
+                    Remote = p.Remote,
+                    Username = _rawDependencies.Username,
+                    Password = _rawDependencies.Password,
                     LocalFolder = p.LocalFolder
                 }).ToDictionary(p => p.Name);
 
@@ -184,6 +189,8 @@ namespace Msbuild
                     Name = p.Name,
                     TopFolder = p.TopFolder,
                     Remote = string.Format(p.Remote, _userDefinedDependencies.Username, _userDefinedDependencies.Password),
+                    Username = _userDefinedDependencies.Username,
+                    Password = _userDefinedDependencies.Password,
                     LocalFolder = p.LocalFolder
                 }).ToDictionary(p => p.Name);
 

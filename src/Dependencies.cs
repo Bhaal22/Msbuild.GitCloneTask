@@ -11,6 +11,9 @@ namespace MsBuild.GitCloneTask
         public string Name { get; set; } = string.Empty;
         public string Remote { get; set; } = string.Empty;
 
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+
         public string LocalFolder { get; set; } = string.Empty;
 
         public string TopFolder { get; set; } = string.Empty;
