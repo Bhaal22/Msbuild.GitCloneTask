@@ -45,6 +45,8 @@ namespace Msbuild
             { _userDefinedDependencyFile = value; }
         }
 
+        public bool Pull { get; set; }
+
         [Output]
         public string[] Names { get; private set; }
 
@@ -117,10 +119,8 @@ namespace Msbuild
 
         #endregion
 
-        protected bool Run() {
-
-            //string gitCommandTemplate  = "{0} -b {1} {2} {3}";
-
+        protected bool Run() 
+        {
             var _rawDependencies = JsonConvert.DeserializeObject<CompileDependencies>(File.ReadAllText(DependencyFile));
             var _userDefinedDependencies = readUserDefinedDependencies();
 
@@ -144,7 +144,7 @@ namespace Msbuild
                         co.BranchName = dependency.Branch;
                         Repository.Clone(dependency.Remote, dependency.OutputFolder, co);
                     }
-                    else
+                    else if (Pull)
                     {
                         using (var repo = new Repository(dependency.OutputFolder))
                         {
@@ -153,7 +153,7 @@ namespace Msbuild
                             options.FetchOptions = new FetchOptions();
                             options.FetchOptions.CredentialsProvider = new CredentialsHandler(
                                 (url, usernameFromUrl, types) => new DefaultCredentials());
-                            repo.Network.Pull(new Signature(dependency.Username, "", new DateTimeOffset(DateTime.Now)), options);
+                            repo.Network.Pull(new Signature(dependency.Username, dependency.Email, new DateTimeOffset(DateTime.Now)), options);
                         }
                     }
                 }
@@ -176,6 +176,7 @@ namespace Msbuild
                     Remote = p.Remote,
                     Username = _rawDependencies.Username,
                     Password = _rawDependencies.Password,
+                    Email = _rawDependencies.Email,
                     LocalFolder = p.LocalFolder
                 }).ToDictionary(p => p.Name);
 
@@ -191,6 +192,7 @@ namespace Msbuild
                     Remote = string.Format(p.Remote, _userDefinedDependencies.Username, _userDefinedDependencies.Password),
                     Username = _userDefinedDependencies.Username,
                     Password = _userDefinedDependencies.Password,
+                    Email = _userDefinedDependencies.Email,
                     LocalFolder = p.LocalFolder
                 }).ToDictionary(p => p.Name);
 
