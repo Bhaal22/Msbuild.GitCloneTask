@@ -71,6 +71,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Dependencies.cs" />
+    <Compile Include="Extensions.cs" />
     <Compile Include="GitCloneTask.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

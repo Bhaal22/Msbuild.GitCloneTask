@@ -47,6 +47,8 @@ namespace Msbuild
 
         public bool Pull { get; set; }
 
+        public string Authentication { get; set; } = "Default";
+
         [Output]
         public string[] Names { get; private set; }
 
@@ -151,8 +153,9 @@ namespace Msbuild
                             Warn(string.Format("Pulling {0}", dependency.Remote));
                             var options = new PullOptions();
                             options.FetchOptions = new FetchOptions();
+
                             options.FetchOptions.CredentialsProvider = new CredentialsHandler(
-                                (url, usernameFromUrl, types) => new DefaultCredentials());
+                                (url, usernameFromUrl, types) => new SecureUsernamePasswordCredentials { Username = dependency.Username, Password = dependency.Password.Secure() });
                             repo.Network.Pull(new Signature(dependency.Username, dependency.Email, new DateTimeOffset(DateTime.Now)), options);
                         }
                     }
