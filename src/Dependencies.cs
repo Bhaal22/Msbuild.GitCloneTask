@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LibGit2Sharp;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,6 +25,15 @@ namespace MsBuild.GitCloneTask
 
         public string Commit { get; set; } = string.Empty;
 
+        public Credentials GetCredentials(string auth)
+        {
+            if (auth.Equals("Basic"))
+            {
+                return new UsernamePasswordCredentials { Username = this.Username, Password = this.Password };
+            }
+            else
+                return new DefaultCredentials();
+        }
 
         public string InputSourceReference
         {

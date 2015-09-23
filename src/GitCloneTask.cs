@@ -142,7 +142,7 @@ namespace Msbuild
                     {
                         Warn(string.Format("Cloning {0} into {1}", dependency.Remote, dependency.OutputFolder));
                         var co = new CloneOptions();
-                        co.CredentialsProvider = (_url, _user, _cred) => new DefaultCredentials();
+                        co.CredentialsProvider = (_url, _user, _cred) => dependency.GetCredentials(Authentication);
                         co.BranchName = dependency.Branch;
                         Repository.Clone(dependency.Remote, dependency.OutputFolder, co);
                     }
@@ -155,7 +155,7 @@ namespace Msbuild
                             options.FetchOptions = new FetchOptions();
 
                             options.FetchOptions.CredentialsProvider = new CredentialsHandler(
-                                (url, usernameFromUrl, types) => new SecureUsernamePasswordCredentials { Username = dependency.Username, Password = dependency.Password.Secure() });
+                                (url, usernameFromUrl, types) => dependency.GetCredentials(Authentication));
                             repo.Network.Pull(new Signature(dependency.Username, dependency.Email, new DateTimeOffset(DateTime.Now)), options);
                         }
                     }
