@@ -15,12 +15,14 @@
 Name : Dependency Name
 
 ####Git Clone / Pull options :
-TopFolder : Directory where to clone sources
-Remote : Remote Url (can be http/git/file protocols)
-Branch : Branch Name
-Commit : Commit Reference
+
+* TopFolder : Directory where to clone sources
+* Remote : Remote Url (can be http/git/file protocols)
+* Branch : Branch Name
+* Commit : Commit Reference
 
 ####Direct Compilation :
-LocalFolder : Folder where to find sources for this dependency
-### JSON example ###
+
+* LocalFolder : Folder where to find sources for this dependency
+
 
