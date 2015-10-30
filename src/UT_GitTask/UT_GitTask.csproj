@@ -56,11 +56,18 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="JsonFormat.cs" />
+    <Compile Include="JsonFormatTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SimpleTaskTest.cs" />
+    <Compile Include="GitTests.cs" />
+    <Compile Include="LibGit2ExtensionsTests.cs" />
+    <Compile Include="VersionResolverTests.cs" />
+    <Compile Include="VersionLabelTests.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\libs\libgit2\LibGit2Sharp\LibGit2Sharp.csproj">
+      <Project>{ee6ed99f-cb12-4683-b055-d28fc7357a34}</Project>
+      <Name>LibGit2Sharp</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MsBuild.GitCloneTask.csproj">
       <Project>{ade30fad-832f-4323-8049-e25a9fafff14}</Project>
       <Name>GitTask</Name>

@@ -71,9 +71,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Dependencies.cs" />
-    <Compile Include="Extensions.cs" />
+    <Compile Include="DirectoryExtensions.cs" />
+    <Compile Include="StringExtensions.cs" />
     <Compile Include="GitCloneTask.cs" />
+    <Compile Include="LibGit2Extensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="VersionLabel.cs" />
+    <Compile Include="VersionResolver.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -97,6 +101,9 @@
       <Project>{ee6ed99f-cb12-4683-b055-d28fc7357a34}</Project>
       <Name>LibGit2Sharp</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

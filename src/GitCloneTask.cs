@@ -14,36 +14,23 @@ using LibGit2Sharp.Handlers;
 
 namespace Msbuild
 {
-
     public enum BuildTool { MSBuild }
 
-    public class BaseGit
+    public class BaseGit : MsBuild.GitCloneTask.ILogger
     {
         public BaseGit()
-            : this(BuildTool.MSBuild) {
+            : this(BuildTool.MSBuild) 
+        {
         }
 
         protected BaseGit(BuildTool t)
-        { currentBuildTool = t; }
-
-        private string _dependencyFile = "git.json";
-
-        public string DependencyFile 
-        {
-            get 
-            { return _dependencyFile; }
-            set 
-            { _dependencyFile = value; }
+        { 
+            currentBuildTool = t; 
         }
 
-        private string _userDefinedDependencyFile = "git.user.json";
-        public string UserDefinedDependencyFile 
-        {
-            get
-            { return _userDefinedDependencyFile; }
-            set
-            { _userDefinedDependencyFile = value; }
-        }
+        public string DependencyFile { get; set; } = "git.json";
+
+        public string UserDefinedDependencyFile { get; set; } = "git.user.json";
 
         public bool Pull { get; set; }
 
@@ -54,29 +41,31 @@ namespace Msbuild
 
         #region personality checks
         private readonly BuildTool currentBuildTool;
-        protected bool RunningInMSBuild {
-            get {
-                return currentBuildTool == BuildTool.MSBuild;
-            }
-        }
+        protected bool RunningInMSBuild => currentBuildTool == BuildTool.MSBuild;
         #endregion
 
-        #region Logging
-        protected void Debug(string p) {
+        #region IMsBuildLogger members
+
+        private int IndentLevel { get; set; } = 0;
+
+        public virtual void Debug(string message) 
+        {
             if (RunningInMSBuild) {
-                GenericMSBuildLog(p, MessageImportance.Low);
+                GenericMSBuildLog(new string('\t', IndentLevel) + message, MessageImportance.Low);
             }
         }
 
-        protected void Log(string p) {
+        public virtual void Log(string message) 
+        {
             if (RunningInMSBuild) {
-                GenericMSBuildLog(p, MessageImportance.Normal);
+                GenericMSBuildLog(new string('\t', IndentLevel) + message, MessageImportance.Normal);
             }
         }
 
-        protected void Warn(string p) {
+        public virtual void Warn(string message) 
+        {
             if (RunningInMSBuild) {
-                GenericMSBuildLog(p, MessageImportance.High);
+                GenericMSBuildLog(new string('\t', IndentLevel) + message, MessageImportance.High);
             }
         }
         #endregion
@@ -113,100 +102,208 @@ namespace Msbuild
         #region support stuff
         private static readonly string HELP_KEYWORD = string.Empty;
 
-        private void GenericMSBuildLog(string message, MessageImportance i) {
+        private void GenericMSBuildLog(string message, MessageImportance messageImportance) {
             if (BuildEngine != null)
-                BuildEngine.LogMessageEvent(new BuildMessageEventArgs(message, HELP_KEYWORD, "git", i));
+                BuildEngine.LogMessageEvent(new BuildMessageEventArgs(message, HELP_KEYWORD, "git", messageImportance));
         }
         #endregion
 
         #endregion
 
-        protected bool Run() 
+        protected virtual bool Run() 
         {
-            var _rawDependencies = JsonConvert.DeserializeObject<CompileDependencies>(File.ReadAllText(DependencyFile));
-            var _userDefinedDependencies = readUserDefinedDependencies();
-
-
-            var dependencies = _mergeDependencies(_rawDependencies, _userDefinedDependencies);
-
-            Names = dependencies.Select(d => {
-                return string.Format(@"{0}\build.xml", d.OutputFolder);
-            }).ToArray();
+            var currentDirectory = Directory.GetCurrentDirectory();
+            var rootRepositoryDirectory = VersionResolver.GetRootRepositoryDirectoryOf(currentDirectory);
+            Log($"{nameof(BaseGit)}.{nameof(Run)}: current directory = {currentDirectory}, root repository directory = {rootRepositoryDirectory}");
             
+            var rawDependencies = JsonConvert.DeserializeObject<CompileDependencies>(File.ReadAllText(DependencyFile));
+            var userDefinedDependencies = readUserDefinedDependencies();
 
-            foreach (var dependency in dependencies)
+            var dependencies = MergeDependencies(rawDependencies, userDefinedDependencies);
+
+            Names = dependencies.Select(d => $@"{d.OutputFolder}\build.xml").ToArray();
+
+            try
             {
-                if (dependency.UseGit)
-                {
-                    if (!Directory.Exists(dependency.OutputFolder))
-                    {
-                        Warn(string.Format("Cloning {0} into {1}", dependency.Remote, dependency.OutputFolder));
-                        var co = new CloneOptions();
-                        co.CredentialsProvider = (_url, _user, _cred) => dependency.GetCredentials(Authentication);
-                        co.BranchName = dependency.Branch;
-                        Repository.Clone(dependency.Remote, dependency.OutputFolder, co);
-                    }
-                    else if (Pull)
-                    {
-                        using (var repo = new Repository(dependency.OutputFolder))
-                        {
-                            Warn(string.Format("Pulling {0}", dependency.Remote));
-                            var options = new PullOptions();
-                            options.FetchOptions = new FetchOptions();
+                IndentLevel++;
 
-                            options.FetchOptions.CredentialsProvider = new CredentialsHandler(
-                                (url, usernameFromUrl, types) => dependency.GetCredentials(Authentication));
-                            repo.Network.Pull(new Signature(dependency.Username, dependency.Email, new DateTimeOffset(DateTime.Now)), options);
+                using (var myRepository = new Repository(rootRepositoryDirectory.FullName))
+                {
+                    foreach (var dependency in dependencies)
+                    {
+                        if (dependency.UseGit)
+                        {
+                            var cloneOptions = new CloneOptions()
+                            {
+                                CredentialsProvider = (_url, _user, _cred) => dependency.GetCredentials(Authentication)
+                            };
+
+                            if (dependency.Branch == "autoversioning")
+                                HandleAutoVersioning(myRepository, rawDependencies.ShortName, dependency, cloneOptions);
+                            else
+                                HandleFixedVersioning(dependency, cloneOptions);
                         }
                     }
                 }
-
+            }
+            finally
+            {
+                IndentLevel--; 
             }
 
             return true;
         }
 
-        public List<Dependency> _mergeDependencies(CompileDependencies _rawDependencies, CompileDependencies _userDefinedDependencies)
+        protected virtual void HandleAutoVersioning(Repository myRepository, string myShortName, Dependency dependency, CloneOptions cloneOptions)
         {
-            Log(string.Format("Raw Dependencies: Count = {0}", _rawDependencies.Dependencies.Count));
-            IDictionary<string, Dependency> transformedRawDependencies = _rawDependencies.Dependencies.Select(p =>
+            if (!string.IsNullOrEmpty(dependency.Commit))
+                throw new InvalidOperationException($"Dependency {dependency}: autoversioning: definition is incoherent: Branch = '{dependency.Branch}' and a Commit = '{dependency.Commit}' => you can't have both set!");
+
+            if (Directory.Exists(dependency.OutputFolder))
+            {
+                Log($"Dependency {dependency}: autoversioning: output folder already exists: removing...");
+                new DirectoryInfo(dependency.OutputFolder).ForceDelete();
+            }
+
+            Log($"Dependency {dependency}: autoversioning: cloning default branch of '{dependency.Remote}' into '{dependency.OutputFolder}'");
+            Repository.Clone(dependency.Remote, dependency.OutputFolder, cloneOptions);
+
+            try
+            {
+                IndentLevel++;
+
+                using (var otherRepository = new Repository(dependency.OutputFolder))
+                {
+                    otherRepository.CheckoutAllRemoteBranches();
+                    VersionResolver.CheckoutBranchInDependencyRepository(otherRepository, myRepository, myShortName, this);
+                }
+            }
+            finally
+            {
+                IndentLevel--; 
+            }
+        }
+
+        protected virtual void HandleFixedVersioning(Dependency dependency, CloneOptions cloneOptions)
+        {
+            if (!string.IsNullOrEmpty(dependency.Branch) && !string.IsNullOrEmpty(dependency.Commit))
+                throw new InvalidOperationException($"Dependency {dependency}: fixed versioning: definition is incoherent: Branch = '{dependency.Branch}' != '' and Commit = '{dependency.Commit}' != '' => you can't have both set!");
+
+            if (!Directory.Exists(dependency.OutputFolder))
+            {
+                Log($"Dependency {dependency}: fixed versioning: cloning fixed branch '{dependency.Branch}' of '{dependency.Remote}' into '{dependency.OutputFolder}'...");
+                cloneOptions.BranchName = dependency.Branch;
+                Repository.Clone(dependency.Remote, dependency.OutputFolder, cloneOptions);
+            }
+            else if (Pull)
+            {
+                Log($"Dependency {dependency}: fixed versioning: repository '{dependency.Remote}' already cloned in '{dependency.OutputFolder}'");
+
+                try
+                {
+                    IndentLevel++;
+
+                    using (var otherRepository = new Repository(dependency.OutputFolder))
+                    {
+                        otherRepository.CheckoutAllRemoteBranches();
+
+                        if (!string.IsNullOrEmpty(dependency.Commit))
+                            HandleFixedVersioning_Commit(dependency, otherRepository);
+                        else
+                            HandleFixedVersioning_Branch(dependency, otherRepository);
+                    }
+                }
+                finally
+                {
+                    IndentLevel--; 
+                }
+            }
+        }
+
+        protected virtual void HandleFixedVersioning_Commit(Dependency dependency, Repository otherRepository)
+        {
+            var dependencyCommit = otherRepository.Lookup(dependency.Commit) as Commit;
+            if (dependencyCommit == null)
+                throw new InvalidOperationException($"Dependency {dependency}: Commit '{dependency.Commit}' is invalid");
+
+            var buildBranch =
+                (from branch in otherRepository.Branches
+                where branch.FriendlyName == VersionResolver.BuildBranchName
+                select branch).SingleOrDefault();
+
+            if (buildBranch == null)
+            {
+                Log($"Dependency {dependency}: fixed versioning: '{VersionResolver.BuildBranchName}' branch not found => creating it at Commit = '{dependency.Commit}'...");
+                otherRepository.CreateBranch(VersionResolver.BuildBranchName, dependency.Commit);
+            }
+            else
+            {
+                Log($"Dependency {dependency}: fixed versioning: '{VersionResolver.BuildBranchName}' branch found => checking it out and hard resetting it to Commit = '{dependency.Commit}'...");
+                otherRepository.Checkout(buildBranch, new CheckoutOptions() { CheckoutModifiers = CheckoutModifiers.Force });
+                otherRepository.Reset(ResetMode.Hard, dependencyCommit);
+            }
+        }
+
+        protected virtual void HandleFixedVersioning_Branch(Dependency dependency, Repository otherRepository)
+        {
+            Log($"Dependency {dependency}: fixed versioning: checking current HEAD branch...");
+            var headBranch = otherRepository.Head.FriendlyName;
+            if (headBranch != dependency.Branch)
+            {
+                Log($"Dependency {dependency}: fixed versioning: the current HEAD branch '{headBranch}' is different than the dependency branch '{dependency.Branch}' => checkout");
+                otherRepository.Checkout(dependency.Branch, new CheckoutOptions() { CheckoutModifiers = CheckoutModifiers.Force });
+            }
+
+            // TODO: perform the pull only when necessary
+
+            Log($"Dependency {dependency}: fixed versioning: pulling {dependency.Remote}");
+            var options = new PullOptions();
+            options.FetchOptions = new FetchOptions()
+            {
+                CredentialsProvider = new CredentialsHandler((url, usernameFromUrl, types) => dependency.GetCredentials(Authentication))
+            };
+            otherRepository.Network.Pull(new Signature(dependency.Username, dependency.Email, new DateTimeOffset(DateTime.Now)), options);
+        }
+
+        public List<Dependency> MergeDependencies(CompileDependencies rawDependencies, CompileDependencies userDefinedDependencies)
+        {
+            Log($"{nameof(MergeDependencies)}: raw dependencies count = {rawDependencies.Dependencies.Count}");
+            IDictionary<string, Dependency> transformedRawDependencies = rawDependencies.Dependencies.Select(p =>
                 new Dependency
                 {
                     Branch = p.Branch,
                     Commit = p.Commit,
-                    Name = p.Name,
+                    DependencyName = p.DependencyName,
                     TopFolder = p.TopFolder,
                     Remote = p.Remote,
-                    Username = _rawDependencies.Username,
-                    Password = _rawDependencies.Password,
-                    Email = _rawDependencies.Email,
+                    Username = rawDependencies.Username,
+                    Password = rawDependencies.Password,
+                    Email = rawDependencies.Email,
                     LocalFolder = p.LocalFolder
-                }).ToDictionary(p => p.Name);
+                }).ToDictionary(p => p.DependencyName);
 
-            Log("UserDefined Dependencies");
-            Log(string.Format("IsNull {0}", _userDefinedDependencies.Dependencies == null));
-            var transformedUserDefinedDependencies = _userDefinedDependencies.Dependencies.Select(p =>
+            Log($"{nameof(MergeDependencies)}: user-defined dependencies specified: {userDefinedDependencies.Dependencies != null}");
+            var transformedUserDefinedDependencies = userDefinedDependencies.Dependencies.Select(p =>
                 new Dependency
                 {
                     Branch = p.Branch,
                     Commit = p.Commit,
-                    Name = p.Name,
+                    DependencyName = p.DependencyName,
                     TopFolder = p.TopFolder,
-                    Remote = string.Format(p.Remote, _userDefinedDependencies.Username, _userDefinedDependencies.Password),
-                    Username = _userDefinedDependencies.Username,
-                    Password = _userDefinedDependencies.Password,
-                    Email = _userDefinedDependencies.Email,
+                    Remote = string.Format(p.Remote, userDefinedDependencies.Username, userDefinedDependencies.Password),
+                    Username = userDefinedDependencies.Username,
+                    Password = userDefinedDependencies.Password,
+                    Email = userDefinedDependencies.Email,
                     LocalFolder = p.LocalFolder
-                }).ToDictionary(p => p.Name);
+                }).ToDictionary(p => p.DependencyName);
 
-            Log("Merge Dependencies");
+            Log($"{nameof(MergeDependencies)}: performing...");
             foreach (var p in transformedUserDefinedDependencies)
             {
                 transformedRawDependencies[p.Key] = p.Value;
             }
 
-
-            Log(string.Format("Dependencies Count = {0}", transformedUserDefinedDependencies.Count));
+            Log($"{nameof(MergeDependencies)}: dependencies count = {transformedUserDefinedDependencies.Count}");
             return transformedRawDependencies.Select(p => p.Value).ToList();
         }
 
@@ -221,8 +318,7 @@ namespace Msbuild
                 }
                 catch(Exception ex)
                 {
-                    Warn(ex.Message);
-                    Warn(ex.StackTrace);
+                    Warn($"Unable to read or deserialize '{UserDefinedDependencyFile}': {ex.Message}");
                 }
             }
 
@@ -264,10 +360,7 @@ namespace Msbuild
         {
         }
 
-        public bool Execute()
-        {
-            return Run();
-        }
+        public bool Execute() => Run();
     }
 
 }

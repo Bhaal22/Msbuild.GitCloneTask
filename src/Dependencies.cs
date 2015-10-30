@@ -1,18 +1,16 @@
 ﻿using LibGit2Sharp;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MsBuild.GitCloneTask
 {
     public class Dependency
     {
-        public string Name { get; set; } = string.Empty;
+        public string DependencyName { get; set; } = string.Empty;
+
         public string Remote { get; set; } = string.Empty;
 
         public string Username { get; set; } = string.Empty;
+
         public string Password { get; set; } = string.Empty;
 
         public string Email { get; set; } = string.Empty;
@@ -25,50 +23,23 @@ namespace MsBuild.GitCloneTask
 
         public string Commit { get; set; } = string.Empty;
 
-        public Credentials GetCredentials(string auth)
-        {
-            if (auth.Equals("Basic"))
-            {
-                return new UsernamePasswordCredentials { Username = this.Username, Password = this.Password };
-            }
-            else
-                return new DefaultCredentials();
-        }
+        public Credentials GetCredentials(string auth) => auth.Equals("Basic") ? new UsernamePasswordCredentials { Username = Username, Password = Password } as Credentials : new DefaultCredentials();
 
-        public string InputSourceReference
-        {
-            get
-            {
-                if (UseGit)
-                    return Remote;
+        public string InputSourceReference => UseGit ? Remote : LocalFolder;
 
-                return LocalFolder;
-            }
-        }
+        public string OutputFolder => UseGit ? $@".\git\{TopFolder}\{DependencyName}" : $@"{LocalFolder}";
 
-        public string OutputFolder
-        {
-            get
-            {
-                if (UseGit)
-                    return string.Format(@".\git\{0}\{1}", TopFolder, Name);
+        public bool UseGit => !string.IsNullOrEmpty(Remote);
 
-                return string.Format(@"{0}", LocalFolder);
-            }
-        }
-
-        public bool UseGit
-        {
-            get
-            {
-                return !string.IsNullOrEmpty(Remote);
-            }
-        }
-
+        public override string ToString() => $@"{DependencyName}";
     }
 
     public class CompileDependencies
     {
+        public string Name { get; set; } = string.Empty;
+
+        public string ShortName { get; set; } = string.Empty;
+
         public string Username { get; set; } = string.Empty;
 
         public string Password { get; set; } = string.Empty;
