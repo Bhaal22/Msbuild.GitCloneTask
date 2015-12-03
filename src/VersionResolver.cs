@@ -164,7 +164,8 @@ namespace MsBuild.GitCloneTask
                 logger.Log($"The branch '{BuildBranchName}' doesn't exist: creating it and resetting it to '{versionLabel.Raw}'");
 
                 // If the build branch doesn't exist, create it and check it out
-                repository.CreateBranch(BuildBranchName, versionLabelTag.Target as Commit);
+                buildBranch = repository.CreateBranch(BuildBranchName, versionLabelTag.Target as Commit);
+                repository.Checkout(buildBranch, new CheckoutOptions() { CheckoutModifiers = CheckoutModifiers.Force });
             }
             else
             {
