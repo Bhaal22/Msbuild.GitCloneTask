@@ -135,10 +135,11 @@ namespace UT_GitTask
                 'Username': 'username',
                 'Password': 'password',
                 'Dependencies': [
+    
                     {
-                        'DependencyName': 'dependencyNotAlreadyDefined',
-                        'LocalFolder': 'c:\\toto\\plop',
-                        'TopFolder': 'plop'
+                        'DependencyName': 'wasscancomponent',
+                        'LocalFolder': 'e:\\dev\\monitor\\git\\ske\\gsx.ske.was',
+                        'Commit':''
                     }
                 ]
             }";
@@ -165,16 +166,16 @@ namespace UT_GitTask
             Assert.AreEqual("username", userDeps.Username);
             Assert.AreEqual("password", userDeps.Password);
             Assert.AreEqual(1, userDeps.Dependencies.Count);
-            Assert.AreEqual("dependency1", userDeps.Dependencies[0].DependencyName);
+            Assert.AreEqual("wasscancomponent", userDeps.Dependencies[0].DependencyName);
 
             var git = new Git();
             var dependencies = git.MergeDependencies(deps, userDeps);
 
-            Assert.AreEqual(4, deps.Dependencies.Count);
+            Assert.AreEqual(4, dependencies.Count);
 
-            Assert.AreEqual("dependencyNotAlreadyDefined", deps.Dependencies[0].DependencyName);
-            Assert.AreEqual("plop", dependencies[0].TopFolder);
-            Assert.AreEqual(string.Empty, dependencies[0].Remote);
+            Assert.AreEqual("dependency1", dependencies[0].DependencyName);
+            Assert.AreEqual("plup", dependencies[0].TopFolder);
+            Assert.AreEqual("http://serverName/repository1", dependencies[0].Remote);
             Assert.AreEqual(@".\git\plup\dependency1", deps.Dependencies[0].OutputFolder);
 
             Assert.AreEqual("dependency2", deps.Dependencies[1].DependencyName);
@@ -182,6 +183,9 @@ namespace UT_GitTask
 
             Assert.AreEqual("dependency3", deps.Dependencies[2].DependencyName);
             Assert.AreEqual(@".\git\Toto\dependency3", dependencies[2].OutputFolder);
+
+            Assert.AreEqual("wasscancomponent", dependencies[3].DependencyName);
+            Assert.AreEqual(@"e:\dev\monitor\git\ske\gsx.ske.was", dependencies[3].OutputFolder);
         }
     }
 }
