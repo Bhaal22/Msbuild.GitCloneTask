@@ -144,7 +144,7 @@ namespace Msbuild
                                 HandleFixedVersioning(dependency, cloneOptions);
                         }
                         else
-                            Log($"{dependency.DependencyName} does not use a remote repository");
+                            Log($"Dependency {dependency} does not use a remote repository");
                     }
                 }
             }
