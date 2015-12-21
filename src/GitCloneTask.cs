@@ -34,7 +34,7 @@ namespace Msbuild
 
         public bool Pull { get; set; }
 
-        public string Authentication { get; set; } = "Default";
+        public string Authentication { get; set; } = "Basic";
 
         [Output]
         public string[] Names { get; private set; }
