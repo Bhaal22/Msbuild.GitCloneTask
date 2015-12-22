@@ -32,9 +32,11 @@ namespace Msbuild
 
         public string UserDefinedDependencyFile { get; set; } = "git.user.json";
 
+        public string UserAuthenticationFile { get; set; } = "git.auth.json";
+
         public bool Pull { get; set; }
 
-        public string Authentication { get; set; } = "Basic";
+        public string Authentication { get; set; } = "Default";
 
         [Output]
         public string[] Names { get; private set; }
@@ -118,8 +120,8 @@ namespace Msbuild
             
             var rawDependencies = JsonConvert.DeserializeObject<CompileDependencies>(File.ReadAllText(DependencyFile));
             var userDefinedDependencies = readUserDefinedDependencies();
-
-            var dependencies = MergeDependencies(rawDependencies, userDefinedDependencies);
+            var userDefinedAuthentication = readUserDefinedAuth();
+            var dependencies = MergeDependencies(rawDependencies, userDefinedDependencies, userDefinedAuthentication);
 
             Names = dependencies.Select(d => $@"{d.OutputFolder}\build.xml").ToArray();
 
@@ -267,8 +269,25 @@ namespace Msbuild
             otherRepository.Network.Pull(new Signature(dependency.Username, dependency.Email, new DateTimeOffset(DateTime.Now)), options);
         }
 
-        public List<Dependency> MergeDependencies(CompileDependencies rawDependencies, CompileDependencies userDefinedDependencies)
+        public List<Dependency> MergeDependencies(CompileDependencies rawDependencies, CompileDependencies userDefinedDependencies, CompileDependencies userDefinedAuth)
         {
+            Log($"{nameof(MergeDependencies)}: user-authentication specified: {! string.IsNullOrEmpty(userDefinedAuth.Username)}");
+            Dependency userAuth = null;
+            if (! string.IsNullOrEmpty(userDefinedAuth.Username))
+            {
+                if (!string.IsNullOrEmpty(userDefinedAuth.AuthenticationType))
+                {
+                    Authentication = userDefinedAuth.AuthenticationType; 
+                }
+
+                userAuth = new Dependency
+                {
+                    Username = userDefinedAuth.Username,
+                    Password = userDefinedAuth.Password,
+                    Email = userDefinedAuth.Email
+                };
+            }
+
             Log($"{nameof(MergeDependencies)}: raw dependencies count = {rawDependencies.Dependencies.Count}");
             IDictionary<string, Dependency> transformedRawDependencies = rawDependencies.Dependencies.Select(p =>
                 new Dependency
@@ -278,9 +297,9 @@ namespace Msbuild
                     DependencyName = p.DependencyName,
                     TopFolder = p.TopFolder,
                     Remote = p.Remote,
-                    Username = rawDependencies.Username,
-                    Password = rawDependencies.Password,
-                    Email = rawDependencies.Email,
+                    Username = (userAuth == null) ? rawDependencies.Username : userAuth.Username,
+                    Password = (userAuth == null) ? rawDependencies.Password : userAuth.Password,
+                    Email = (userAuth == null) ? rawDependencies.Email : userAuth.Email,
                     LocalFolder = p.LocalFolder
                 }).ToDictionary(p => p.DependencyName);
 
@@ -293,9 +312,9 @@ namespace Msbuild
                     DependencyName = p.DependencyName,
                     TopFolder = p.TopFolder,
                     Remote = string.Format(p.Remote, userDefinedDependencies.Username, userDefinedDependencies.Password),
-                    Username = userDefinedDependencies.Username,
-                    Password = userDefinedDependencies.Password,
-                    Email = userDefinedDependencies.Email,
+                    Username = (userAuth == null) ? userDefinedDependencies.Username : userAuth.Username,
+                    Password = (userAuth == null) ? userDefinedDependencies.Password : userAuth.Password,
+                    Email = (userAuth == null) ? userDefinedDependencies.Email : userAuth.Email,
                     LocalFolder = p.LocalFolder
                 }).ToDictionary(p => p.DependencyName);
 
@@ -321,12 +340,30 @@ namespace Msbuild
                 catch(Exception ex)
                 {
                     Warn($"Unable to read or deserialize '{UserDefinedDependencyFile}': {ex.Message}");
-                }
+                }                
             }
 
             return _userDependencies;
         }
 
+        private CompileDependencies readUserDefinedAuth()
+        {
+            CompileDependencies _userAuth = new CompileDependencies();
+            if (File.Exists(DependencyFile))
+            {
+                try
+                {
+                    _userAuth = JsonConvert.DeserializeObject<CompileDependencies>(File.ReadAllText(UserAuthenticationFile));
+                }
+                catch (Exception ex)
+                {
+                    Warn($"Unable to read or deserialize '{UserAuthenticationFile}': {ex.Message}");
+                }
+            }
+
+            return _userAuth;
+        }
+        
         private int Run(string command, string parameters)
         {
             try

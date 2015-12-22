@@ -46,6 +46,8 @@ namespace MsBuild.GitCloneTask
 
         public string Email { get; set; } = string.Empty;
 
+        public string AuthenticationType { get; set; } = "Basic";
+
         public IList<Dependency> Dependencies { get; set; }
 
         public CompileDependencies()
